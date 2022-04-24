@@ -8,7 +8,7 @@ import java.net.URL;
 class URLReaderWriter implements ByteReaderWriter {
     private URL url;
     
-    public URLReaderWriter(URL url) {
+    URLReaderWriter(URL url) {
         this.url = url;
     }
 

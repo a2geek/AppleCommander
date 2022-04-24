@@ -8,7 +8,7 @@ import java.nio.file.Path;
 class PathReaderWriter implements ByteReaderWriter {
     private Path path;
     
-    public PathReaderWriter(Path path) {
+    PathReaderWriter(Path path) {
         this.path = path;
     }
     

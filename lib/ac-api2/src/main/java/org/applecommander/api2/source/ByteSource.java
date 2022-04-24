@@ -1,13 +1,9 @@
 package org.applecommander.api2.source;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+
+import org.applecommander.api2.util.GZIP;
 
 public class ByteSource {
     public static ByteSource from(Path path) {
@@ -16,7 +12,12 @@ public class ByteSource {
     public static ByteSource from(URL url) {
         return new ByteSource(new URLReaderWriter(url));
     }
-    
+    public static ByteSource create(int size) {
+    	return create(new byte[size]);
+    }
+    public static ByteSource create(byte[] data) {
+    	return new ByteSource(new ArrayReaderWriter(data));
+    }
     
     private ByteReaderWriter rw;
     private byte[] data;
@@ -26,12 +27,10 @@ public class ByteSource {
         this.rw = rw;
         this.data = rw.read();
         
-        try (GZIPInputStream inputStream = new GZIPInputStream(new ByteArrayInputStream(this.data))) {
-            this.data = inputStream.readAllBytes();
-            this.isGzipCompressed = true;
-        } catch (IOException ignored) {
-            // Intentionally ignoring the exception
-        }
+        GZIP.decompressOptional(this.data).ifPresent(bytes -> {
+        	this.data = bytes;
+        	this.isGzipCompressed = true;
+        });
     }
     
     public byte[] read(int offset, int length) {
@@ -42,20 +41,16 @@ public class ByteSource {
     public void write(int offset, byte[] chunk) {
         System.arraycopy(chunk, 0, data, offset, chunk.length);
     }
+    public int size() {
+    	return data.length;
+    }
     
     public boolean canSave() {
         return rw.canWrite();
     }
     public void save() {
         if (isGzipCompressed) {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            try (GZIPOutputStream outputStream = new GZIPOutputStream(baos)) {
-                outputStream.write(data);
-                outputStream.flush();
-            } catch (IOException cause) {
-                throw new UncheckedIOException(cause);
-            }
-            rw.write(baos.toByteArray());
+            rw.write(GZIP.compress(data));
         }
         else {
             rw.write(data);
