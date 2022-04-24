@@ -1,0 +1,40 @@
+plugins {
+    id 'java-library'
+}
+
+sourceCompatibility = 11
+targetCompatibility = 11
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation "junit:junit:$junitVersion"
+}
+
+tasks.withType(Jar) {
+    archiveBaseName = 'AppleCommander'
+    archiveAppendix = 'api2'
+    manifest {
+        attributes 'Implementation-Title': 'AppleCommander',
+                   'Implementation-Version': archiveVersion
+    }
+    from('../../LICENSE')
+}
+
+javadoc {
+    title = "AppleCommander API 2 ${version}"
+    source = sourceSets.main.allJava
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
